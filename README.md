@@ -1,35 +1,52 @@
-# Theo doi bien dong nuoc mat song Huong bang MNDWI
+# Theo dõi biến động nước mặt Thành phố Huế bằng MNDWI
 
-## Muc tieu
+## Mục tiêu
 
-Theo doi dien tich nuoc mat trong mua mua lu thang 10-12 tai Hue giai doan 2016-2025 bang MNDWI va nguong Otsu tu dong. AOI Hue dang co duoc giu nguyen. De chuyen tu pham vi Hue sang chi song Huong, ve ROI/corridor trong GEE theo huong dan ben duoi.
+Theo dõi diện tích nước mặt trên toàn Thành phố Huế tại ba mốc **2018, 2021, 2025**, cùng cửa sổ **01/03–31/08**, bằng Sentinel-2 và chỉ số MNDWI. Mục tiêu là so sánh liên năm, không đồng nhất nước phát hiện được với nước lũ.
 
-## Cau truc
+## Cấu trúc
 
 ```text
-gee/hue_river_mndwi_2016_2025.js  Ma GEE day du
-docs/methodology.md                Giai thich phuong phap
-report/project_report.md           Bao cao khoa hoc de hoan thien sau khi chay
-study_area.geojson                 AOI Hue goc
-study_area.zip                     Shapefile nen de upload GEE
-01_load_aoi.js ... 05_export_mndwi_results.js  Ma cua quy trinh MNDWI cu, giu lai de tham khao
+01_load_aoi.js                  Nạp và hiển thị AOI Huế
+02_sentinel2_collection.js      Lọc bộ sưu tập Sentinel-2 theo mùa
+03_cloud_mask_composite.js      Che mây/bóng mây (SCL) và composite median
+04_mndwi_water_change.js        MNDWI, water mask, diện tích, bản đồ biến động
+05_export_mndwi_results.js      Xuất GeoTIFF, bản đồ thay đổi và CSV
+06_results_template.md          Mẫu điền kết quả sau khi chạy GEE
+docs/methodology.md             Giải thích phương pháp
+report/project_report.md        Báo cáo khoa học (điền số liệu sau khi xuất)
+study_area.geojson              AOI Huế gốc
+study_area.zip                  Shapefile nén để upload GEE
 ```
 
-## Cach chay
+Các bước `01`–`05` chạy độc lập trong GEE Code Editor. Sao chép từng tệp, không cần ghép thành một script.
 
-1. Upload `study_area.zip` vao Assets neu Asset chua ton tai.
-2. Mo `gee/hue_river_mndwi_2016_2025.js`, sao chep toan bo sang GEE Code Editor va bam Run.
-3. Xem Console: bang ket qua, Otsu threshold va bieu do dien tich nuoc theo nam.
-4. Xem Layers: ROI, RGB 2016/2025, MNDWI va water mask.
-5. Chi khi ket qua dat yeu cau, dat `CONFIG.ENABLE_EXPORT = true`, chay lai, sau do tu bam Run cac task trong tab Tasks.
+## Cách chạy
 
-## Thay ROI
+1. Upload `study_area.zip` vào Assets nếu Asset chưa tồn tại. Asset ID mặc định: `projects/potent-pursuit-362612/assets/study_area`. Đổi `aoiAsset` trong mỗi script nếu ID khác.
+2. Chạy `01_load_aoi.js` để kiểm tra ranh giới AOI.
+3. Chạy `02_sentinel2_collection.js` để xem số ảnh và RGB sau lọc mây metadata.
+4. Chạy `03_cloud_mask_composite.js` để kiểm tra composite sạch mây (mùa và từng tháng).
+5. Chạy `04_mndwi_water_change.js`: đối chiếu RGB, MNDWI và water mask. Điều chỉnh `mndwiThreshold` nếu cần, rồi chạy lại.
+6. Khi ngưỡng đã ổn, đặt cùng giá trị trong `05_export_mndwi_results.js`, Run, sau đó tự bấm Run từng task trong tab Tasks. Kết quả vào thư mục Drive `GEE_Hue_MNDWI`.
+7. Điền `06_results_template.md` và phần kết quả trong `report/project_report.md` từ CSV và bản đồ đã xuất.
 
-Mac dinh: `var roi = hueBoundary;` giu nguyen khu vuc da chon. De phan tich rieng song Huong, dung cong cu Geometry trong GEE de ve polygon hoac centerline roi thay dong nay thanh `var roi = geometry;`. Neu ve centerline, dat `corridorBufferMeters` lon hon 0. Khong hard-code polygon song trong ma vi khong co nguon ranh gioi song da xac minh.
+## Tham số mặc định
 
-## Luu y phuong phap
+| Tham số | Giá trị | File |
+| --- | --- | --- |
+| AOI | Toàn Thành phố Huế | mọi script |
+| Collection | `COPERNICUS/S2_SR_HARMONIZED` | `02`–`05` |
+| Mốc | T0_2018, T1_2021, T2_2025 | `02`–`05` |
+| Cửa sổ | 01/03–31/08 | `02`–`05` |
+| Ngưỡng mây metadata | 20% (`02`), 80% sau khi mask SCL (`03`–`05`) | |
+| Ngưỡng MNDWI | `0.0` (kiểm tra trên bản đồ rồi chỉnh) | `04`, `05` |
+| Pixel liên thông tối thiểu | 8 | `04`, `05` |
+| Scale xuất / diện tích | 20 m | `04`, `05` |
 
-- Sentinel-2 B11 la 20 m; noi suy ve luoi 10 m chi la spatial resampling, khong phai pan-sharpening that.
-- Landsat 8/9 SR giu 30 m. Khong tron pixel Landsat va Sentinel-2 trong cung mot composite.
-- Otsu la nguong chinh theo tung nam; can kiem tra lai water mask voi RGB.
-- Nuoc phat hien trong mua mua lu la nuoc mat; khong tu dong dong nghia voi nuoc lu.
+## Lưu ý phương pháp
+
+- MNDWI = `(B3 − B11) / (B3 + B11)`. Nước thường có giá trị cao hơn đất khô và thực vật.
+- B11 gốc 20 m; diện tích được tính ở scale 20 m. Không gọi đây là pan-sharpening.
+- Composite median là trạng thái điển hình của cả mùa, không phải một ngày cụ thể.
+- Nước mặt phát hiện được không tự động đồng nghĩa với ngập lũ.

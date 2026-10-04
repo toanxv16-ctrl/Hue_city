@@ -1,5 +1,7 @@
 # Mẫu báo cáo kết quả MNDWI — Thành phố Huế
 
+Điền sau khi chạy `04_mndwi_water_change.js` (kiểm tra) và `05_export_mndwi_results.js` (xuất). Sao chép số liệu sang `report/project_report.md` khi hoàn thiện báo cáo.
+
 ## 1. Thiết kế phân tích
 
 - AOI: Toàn thành phố Huế.
