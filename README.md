@@ -1,47 +1,35 @@
-# Đề tài: Theo dõi biến động nước mặt tại Huế bằng chỉ số MNDWI từ ảnh Sentinel-2
+# Theo doi bien dong nuoc mat song Huong bang MNDWI
 
-## Mục tiêu
+## Muc tieu
 
-Lập bản đồ nước mặt tại toàn thành phố Huế cho các mốc năm 2018, 2021 và 2025, sau đó định lượng và trực quan hóa nơi diện tích nước mặt tăng, giảm hoặc ổn định. Nước mặt trong đề tài gồm sông, hồ, ao, đầm phá và các mặt nước quan sát được ở cùng mùa đã chọn; đây không phải đề tài xác định nước lũ.
+Theo doi dien tich nuoc mat trong mua mua lu thang 10-12 tai Hue giai doan 2016-2025 bang MNDWI va nguong Otsu tu dong. AOI Hue dang co duoc giu nguyen. De chuyen tu pham vi Hue sang chi song Huong, ve ROI/corridor trong GEE theo huong dan ben duoi.
 
-## Lộ trình thực hiện
+## Cau truc
 
-| Giai đoạn | Công việc | Công cụ | Kết quả |
-| --- | --- | --- | --- |
-| 1. Chốt thiết kế | Xác định AOI, các mốc 2018/2021/2025 và cùng mùa ít mưa (tháng 3–8). | — | Phạm vi, mốc thời gian, tiêu chí so sánh. |
-| 2. Nạp AOI | Tải AOI lên Assets và kiểm tra ranh giới. | GEE | `01_load_aoi.js` |
-| 3. Chọn Sentinel-2 | Lọc `COPERNICUS/S2_SR_HARMONIZED` theo AOI, thời gian và mây. | GEE | `02_sentinel2_collection.js` |
-| 4. Che mây, composite | Dùng SCL che mây/bóng mây và tạo ảnh median cùng mùa. | GEE | `03_cloud_mask_composite.js` |
-| 5. MNDWI và biến động | Tính MNDWI, tách nước, tính diện tích và so sánh các mốc. | GEE | `04_mndwi_water_change.js` |
-| 6. Xuất kết quả | Xuất MNDWI, lớp nước, lớp biến động và bảng diện tích sang Google Drive. | GEE | `05_export_mndwi_results.js` |
-| 7. Kiểm tra, báo cáo | Kiểm tra ngưỡng với RGB, diễn giải biến động và hoàn thiện báo cáo. | GEE/QGIS | `06_results_template.md`, bản đồ, bảng diện tích, nhận xét. |
+```text
+gee/hue_river_mndwi_2016_2025.js  Ma GEE day du
+docs/methodology.md                Giai thich phuong phap
+report/project_report.md           Bao cao khoa hoc de hoan thien sau khi chay
+study_area.geojson                 AOI Hue goc
+study_area.zip                     Shapefile nen de upload GEE
+01_load_aoi.js ... 05_export_mndwi_results.js  Ma cua quy trinh MNDWI cu, giu lai de tham khao
+```
 
-## Khu vực và mốc thời gian
+## Cach chay
 
-- **AOI:** `study_area.geojson`, ranh giới toàn thành phố Huế.
-- **Hệ tọa độ đầu vào:** WGS 84 / EPSG:4326.
-- **Asset ID đang dùng:** `projects/potent-pursuit-362612/assets/study_area`.
+1. Upload `study_area.zip` vao Assets neu Asset chua ton tai.
+2. Mo `gee/hue_river_mndwi_2016_2025.js`, sao chep toan bo sang GEE Code Editor va bam Run.
+3. Xem Console: bang ket qua, Otsu threshold va bieu do dien tich nuoc theo nam.
+4. Xem Layers: ROI, RGB 2016/2025, MNDWI va water mask.
+5. Chi khi ket qua dat yeu cau, dat `CONFIG.ENABLE_EXPORT = true`, chay lai, sau do tu bam Run cac task trong tab Tasks.
 
-| Mốc | Khoảng tổng hợp |
-| --- | --- |
-| T0_2018 | 01/03/2018 – 31/08/2018 |
-| T1_2021 | 01/03/2021 – 31/08/2021 |
-| T2_2025 | 01/03/2025 – 31/08/2025 |
+## Thay ROI
 
-Giữ nguyên cùng khoảng thời gian cho các năm để hạn chế nhầm biến động mùa vụ với biến động nước mặt.
+Mac dinh: `var roi = hueBoundary;` giu nguyen khu vuc da chon. De phan tich rieng song Huong, dung cong cu Geometry trong GEE de ve polygon hoac centerline roi thay dong nay thanh `var roi = geometry;`. Neu ve centerline, dat `corridorBufferMeters` lon hon 0. Khong hard-code polygon song trong ma vi khong co nguon ranh gioi song da xac minh.
 
-## Cách chạy trong GEE
+## Luu y phuong phap
 
-1. Vào [Code Editor](https://code.earthengine.google.com/) và mở tab **Assets**.
-2. Nếu AOI chưa có, chọn **NEW → Table upload**, chọn `study_area.zip` (Shapefile nén), rồi chờ tác vụ hoàn tất.
-3. Dán từng file theo thứ tự `01` → `02` → `03` → `04` vào Code Editor và bấm **Run**.
-4. Ở giai đoạn 5, xem lớp RGB và lớp `MNDWI` để kiểm tra ngưỡng `mndwiThreshold`. Điều chỉnh ngưỡng nếu lớp nước lẫn nhiều đất ướt/bóng tối hoặc bỏ sót nước.
-5. Ghi diện tích nước mặt (ha) xuất hiện trong **Console**. Bật lớp biến động: xanh dương là nước ổn định, xanh lá là nước tăng, đỏ là nước giảm.
-6. Khi ngưỡng đã chốt, dán `05_export_mndwi_results.js`, bấm **Run**, mở tab **Tasks** và tự bấm **Run** cho các tệp muốn xuất. Dùng `06_results_template.md` để tổng hợp kết quả.
-
-## Quy tắc phương pháp
-
-- **MNDWI** = `(Green − SWIR1) / (Green + SWIR1)` = `(B3 − B11) / (B3 + B11)`.
-- Ngưỡng khởi đầu là `MNDWI > 0`; đây là tham số cần kiểm tra bằng ảnh RGB, không phải giá trị cố định cho mọi khu vực.
-- Che mây và bóng mây bằng band `SCL` trước khi tạo median composite.
-- Tính diện tích ở `scale: 20` m vì band SWIR1 (`B11`) có độ phân giải 20 m.
+- Sentinel-2 B11 la 20 m; noi suy ve luoi 10 m chi la spatial resampling, khong phai pan-sharpening that.
+- Landsat 8/9 SR giu 30 m. Khong tron pixel Landsat va Sentinel-2 trong cung mot composite.
+- Otsu la nguong chinh theo tung nam; can kiem tra lai water mask voi RGB.
+- Nuoc phat hien trong mua mua lu la nuoc mat; khong tu dong dong nghia voi nuoc lu.
