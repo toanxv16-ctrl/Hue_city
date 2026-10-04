@@ -1,11 +1,11 @@
-// Giai đoạn 5 — Che mây/bóng mây bằng SCL và tạo composite Sentinel-2.
+// Giai đoạn 4 — Che mây/bóng mây bằng SCL và tạo composite Sentinel-2.
 // SCL (Scene Classification Layer) có trong COPERNICUS/S2_SR_HARMONIZED.
 
 var aoiAsset = 'projects/potent-pursuit-362612/assets/study_area';
 var aoi = ee.FeatureCollection(aoiAsset);
 var s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED');
 
-// Giữ cùng mùa giữa các năm để việc so sánh mặt nước có ý nghĩa hơn.
+// Giữ cùng mùa ít mưa giữa các năm để việc so sánh nước mặt có ý nghĩa hơn.
 var periods = [
   {label: 'T0_2018', start: '2018-03-01', end: '2018-08-31', year: 2018},
   {label: 'T1_2021', start: '2021-03-01', end: '2021-08-31', year: 2021},
@@ -53,10 +53,10 @@ var rgbVis = {bands: ['B4', 'B3', 'B2'], min: 0.02, max: 0.30, gamma: 1.2};
 Map.centerObject(aoi, 9);
 Map.addLayer(aoi.style({color: 'FFD700', fillColor: '00000000', width: 2}), {}, 'AOI — Thành phố Huế');
 
-// Composite median cho cả mùa (hiển thị trên bản đồ).
-periods.forEach(function(period) {
+// Composite median cho cả mùa. Chỉ bật mặc định mốc đầu để các lớp không che nhau.
+periods.forEach(function(period, index) {
   var composite = seasonalComposite(period);
-  Map.addLayer(composite, rgbVis, period.label + ' — composite mùa sạch mây', true);
+  Map.addLayer(composite, rgbVis, period.label + ' — composite mùa sạch mây', index === 0);
 });
 
 // Composite median từng tháng (thêm vào Layers nhưng mặc định tắt).

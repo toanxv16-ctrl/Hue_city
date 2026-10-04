@@ -1,4 +1,4 @@
-// Giai đoạn 3 — Nạp và hiển thị AOI Thành phố Huế trong Google Earth Engine.
+// Giai đoạn 2 — Nạp và hiển thị AOI Thành phố Huế trong Google Earth Engine.
 //
 // 1. Mở https://code.earthengine.google.com/ rồi vào tab Assets.
 // 2. NEW > Table upload > chọn tệp AOI đã chuyển sang Shapefile (.zip).
@@ -23,6 +23,6 @@ Map.addLayer(aoi.style(aoiStyle), {}, 'AOI — Thành phố Huế');
 print('AOI — Thành phố Huế', aoi);
 print('Diện tích AOI (km²)', aoi.geometry().area().divide(1e6));
 
-// Các bước tiếp theo sẽ sử dụng biến `aoi` để lọc ảnh vệ tinh:
+// Các bước tiếp theo sẽ sử dụng biến `aoi` để lọc ảnh Sentinel-2 và tính MNDWI:
 // var images = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
 //   .filterBounds(aoi);

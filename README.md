@@ -1,111 +1,47 @@
-# Đề tài: Theo dõi biến động diện tích mặt nước từ ảnh viễn thám
+# Đề tài: Theo dõi biến động nước mặt tại Huế bằng chỉ số MNDWI từ ảnh Sentinel-2
 
-## Giai đoạn 1 — Chốt phạm vi
+## Mục tiêu
 
-### 1. Mục tiêu đề tài
+Lập bản đồ nước mặt tại toàn thành phố Huế cho các mốc năm 2018, 2021 và 2025, sau đó định lượng và trực quan hóa nơi diện tích nước mặt tăng, giảm hoặc ổn định. Nước mặt trong đề tài gồm sông, hồ, ao, đầm phá và các mặt nước quan sát được ở cùng mùa đã chọn; đây không phải đề tài xác định nước lũ.
 
-Đánh giá sự thay đổi diện tích mặt nước tại khu vực nghiên cứu qua các mốc thời gian lựa chọn, dựa trên ảnh viễn thám. Kết quả nhằm xác định xu hướng tăng/giảm mặt nước và cung cấp bản đồ biến động để phục vụ theo dõi tài nguyên nước.
+## Lộ trình thực hiện
 
-### 2. Khu vực nghiên cứu
+| Giai đoạn | Công việc | Công cụ | Kết quả |
+| --- | --- | --- | --- |
+| 1. Chốt thiết kế | Xác định AOI, các mốc 2018/2021/2025 và cùng mùa ít mưa (tháng 3–8). | — | Phạm vi, mốc thời gian, tiêu chí so sánh. |
+| 2. Nạp AOI | Tải AOI lên Assets và kiểm tra ranh giới. | GEE | `01_load_aoi.js` |
+| 3. Chọn Sentinel-2 | Lọc `COPERNICUS/S2_SR_HARMONIZED` theo AOI, thời gian và mây. | GEE | `02_sentinel2_collection.js` |
+| 4. Che mây, composite | Dùng SCL che mây/bóng mây và tạo ảnh median cùng mùa. | GEE | `03_cloud_mask_composite.js` |
+| 5. MNDWI và biến động | Tính MNDWI, tách nước, tính diện tích và so sánh các mốc. | GEE | `04_mndwi_water_change.js` |
+| 6. Xuất kết quả | Xuất MNDWI, lớp nước, lớp biến động và bảng diện tích sang Google Drive. | GEE | `05_export_mndwi_results.js` |
+| 7. Kiểm tra, báo cáo | Kiểm tra ngưỡng với RGB, diễn giải biến động và hoàn thiện báo cáo. | GEE/QGIS | `06_results_template.md`, bản đồ, bảng diện tích, nhận xét. |
 
-- **Khu vực:** Thành phố Huế, Việt Nam.
-- **Phạm vi không gian dự kiến:** Toàn bộ vùng mặt nước và vùng đệm lân cận trong ranh giới hành chính Thành phố Huế.
-- **Hệ tọa độ dự kiến:** WGS 84 (EPSG:4326) khi thu thập dữ liệu; có thể chuyển sang hệ UTM phù hợp khi tính diện tích.
+## Khu vực và mốc thời gian
 
-### 3. Mốc thời gian
+- **AOI:** `study_area.geojson`, ranh giới toàn thành phố Huế.
+- **Hệ tọa độ đầu vào:** WGS 84 / EPSG:4326.
+- **Asset ID đang dùng:** `projects/potent-pursuit-362612/assets/study_area`.
 
-Để hạn chế sai lệch do mùa vụ, các ảnh cần được chọn cùng mùa hoặc gần cùng tháng giữa các năm.
-
-| Mốc | Thời gian dự kiến | Mục đích |
-| --- | --- | --- |
-| T0 | Năm cơ sở (ví dụ: 2016) | Xác định hiện trạng ban đầu |
-| T1 | Năm giữa kỳ (ví dụ: 2021) | Nhận diện biến động trung hạn |
-| T2 | Năm gần nhất (ví dụ: 2026) | Đánh giá hiện trạng và biến động tổng thể |
-
-**Tiêu chí chọn ảnh:** mây thấp, độ phân giải phù hợp, cùng mùa quan sát; ưu tiên Sentinel-2 hoặc Landsat 8/9.
-
-### 4. Câu hỏi nghiên cứu
-
-1. Diện tích mặt nước tại khu vực nghiên cứu thay đổi như thế nào giữa các mốc thời gian?
-2. Mức tăng hoặc giảm diện tích mặt nước là bao nhiêu (ha và %)?
-3. Biến động tập trung tại những vị trí nào trong khu vực nghiên cứu?
-4. Xu hướng biến động có nhất quán giữa các giai đoạn hay không?
-
-### 5. Sản phẩm đầu ra của phạm vi này
-
-- Ranh giới khu vực nghiên cứu đã xác nhận.
-- Danh sách ảnh vệ tinh đáp ứng tiêu chí cho từng mốc thời gian.
-- Bản đồ mặt nước từng mốc và bản đồ tăng/giảm mặt nước.
-- Bảng thống kê diện tích, chênh lệch và tỷ lệ biến động.
-
-### 6. Thông tin cần xác nhận trước giai đoạn 2
-
-- Ba mốc thời gian chính xác và mùa quan sát mong muốn.
-- Nguồn ảnh ưu tiên (Sentinel-2 hay Landsat) và độ chính xác mong muốn.
-- Ranh giới hành chính cần áp dụng (đặc biệt nếu nghiên cứu so sánh các năm có thay đổi địa giới).
-
-## Giai đoạn 2 — Chuẩn bị AOI
-
-### AOI đã tạo
-
-- **Tệp:** `study_area.geojson`
-- **Khu vực:** Thành phố Huế (mã hành chính 46).
-- **Kiểu hình học:** `MultiPolygon` theo WGS 84 / EPSG:4326.
-- **Hộp bao (kinh độ, vĩ độ):** 107.032540, 15.996149, 108.192161, 16.743931.
-- **Diện tích tham chiếu của nguồn:** 4.947,11 km².
-
-### Kiểm tra hình học
-
-- Một đối tượng (Feature) duy nhất.
-- 2.259 tọa độ; vòng ranh giới khép kín.
-- Tất cả tọa độ nằm trong miền hợp lệ của WGS 84.
-
-### Nguồn dữ liệu
-
-Ranh giới được trích từ bộ **Vietnamese Provinces Database** (GIS Dataset), mã 46 — Huế. Bộ dữ liệu công bố hình học theo WGS 84 và cho biết ranh giới GIS được dẫn xuất từ Bản đồ tham chiếu đơn vị hành chính Việt Nam của Nhà xuất bản Tài nguyên, Môi trường và Bản đồ Việt Nam.
-
-### Lưu ý sử dụng trong GEE
-
-Nếu các ảnh lịch sử có trước khi Thành phố Huế trực thuộc trung ương được thành lập, AOI này vẫn được giữ cố định để so sánh cùng một không gian. Khi cần phân tích theo địa giới lịch sử, cần thay bằng ranh giới đúng tại từng thời điểm.
-
-## Giai đoạn 3 — Tạo dự án GEE
-
-### Tệp mã
-
-`01_load_aoi.js` nạp AOI từ Google Earth Engine Assets, đưa ranh giới lên bản đồ, phóng bản đồ vào AOI và in diện tích trong Console.
-
-### Cách chạy
-
-1. Mở [Earth Engine Assets](https://code.earthengine.google.com/assets), chọn **NEW → Table upload** và tải `study_area.geojson`.
-2. Sau khi GEE xử lý xong, sao chép **Asset ID** (thường có dạng `users/<tên_tài_khoản>/study_area`).
-3. Tạo script mới trong GEE Code Editor, dán nội dung `01_load_aoi.js`, rồi thay giá trị `aoiAsset` bằng Asset ID vừa sao chép.
-4. Nhấn **Run**. Lớp `AOI — Thành phố Huế` sẽ hiện bằng đường viền vàng; Console sẽ in thông tin và diện tích AOI.
-
-## Giai đoạn 4 — Lấy ảnh Sentinel-2
-
-### Tệp mã
-
-`02_sentinel2_collection.js` sử dụng bộ sưu tập `COPERNICUS/S2_SR_HARMONIZED`, lọc ảnh theo AOI, cửa sổ ngày và `CLOUDY_PIXEL_PERCENTAGE ≤ 20`.
-
-### Mốc mặc định
-
-| Mốc | Khoảng lấy ảnh |
+| Mốc | Khoảng tổng hợp |
 | --- | --- |
-| T0 | 01/03/2018 – 31/08/2018 |
-| T1 | 01/03/2021 – 31/08/2021 |
-| T2 | 01/03/2025 – 31/08/2025 |
+| T0_2018 | 01/03/2018 – 31/08/2018 |
+| T1_2021 | 01/03/2021 – 31/08/2021 |
+| T2_2025 | 01/03/2025 – 31/08/2025 |
 
-Các cửa sổ này cùng mùa và có thể sửa ở biến `periods`. Khi chạy, Console cho biết số ảnh còn lại; các lớp RGB được thêm vào bản đồ nhưng mặc định tắt, trừ ảnh ít mây nhất của T0 để kiểm tra nhanh.
+Giữ nguyên cùng khoảng thời gian cho các năm để hạn chế nhầm biến động mùa vụ với biến động nước mặt.
 
-## Giai đoạn 5 — Lọc mây và tạo composite
+## Cách chạy trong GEE
 
-### Tệp mã
+1. Vào [Code Editor](https://code.earthengine.google.com/) và mở tab **Assets**.
+2. Nếu AOI chưa có, chọn **NEW → Table upload**, chọn `study_area.zip` (Shapefile nén), rồi chờ tác vụ hoàn tất.
+3. Dán từng file theo thứ tự `01` → `02` → `03` → `04` vào Code Editor và bấm **Run**.
+4. Ở giai đoạn 5, xem lớp RGB và lớp `MNDWI` để kiểm tra ngưỡng `mndwiThreshold`. Điều chỉnh ngưỡng nếu lớp nước lẫn nhiều đất ướt/bóng tối hoặc bỏ sót nước.
+5. Ghi diện tích nước mặt (ha) xuất hiện trong **Console**. Bật lớp biến động: xanh dương là nước ổn định, xanh lá là nước tăng, đỏ là nước giảm.
+6. Khi ngưỡng đã chốt, dán `05_export_mndwi_results.js`, bấm **Run**, mở tab **Tasks** và tự bấm **Run** cho các tệp muốn xuất. Dùng `06_results_template.md` để tổng hợp kết quả.
 
-`03_cloud_mask_composite.js` dùng band `SCL` của Sentinel-2 để che pixel không có dữ liệu, pixel lỗi, bóng mây, mây xác suất trung bình/cao và cirrus. Các band phản xạ được đưa về thang 0–1 trước khi tạo ảnh `median()`.
+## Quy tắc phương pháp
 
-### Kết quả khi chạy
-
-- Ba lớp composite mùa sạch mây (`T0_2018`, `T1_2021`, `T2_2025`) hiển thị ngay trên bản đồ.
-- Mười tám lớp composite tháng (tháng 3–8 cho từng mốc) nằm trong bảng **Layers**, mặc định tắt.
-- Console in số ảnh đã dùng cho mỗi composite mùa.
-
+- **MNDWI** = `(Green − SWIR1) / (Green + SWIR1)` = `(B3 − B11) / (B3 + B11)`.
+- Ngưỡng khởi đầu là `MNDWI > 0`; đây là tham số cần kiểm tra bằng ảnh RGB, không phải giá trị cố định cho mọi khu vực.
+- Che mây và bóng mây bằng band `SCL` trước khi tạo median composite.
+- Tính diện tích ở `scale: 20` m vì band SWIR1 (`B11`) có độ phân giải 20 m.

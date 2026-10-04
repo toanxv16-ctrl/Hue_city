@@ -1,11 +1,11 @@
-// Giai đoạn 4 — Lấy bộ sưu tập Sentinel-2 cho AOI Thành phố Huế.
+// Giai đoạn 3 — Lấy bộ sưu tập Sentinel-2 cho nghiên cứu biến động nước mặt.
 //
 // Thay bằng Asset ID AOI của bạn trên Google Earth Engine.
 var aoiAsset = 'projects/potent-pursuit-362612/assets/study_area';
 var aoi = ee.FeatureCollection(aoiAsset);
 
-// Chọn các cửa sổ cùng mùa để giảm ảnh hưởng mùa vụ.
-// Có thể sửa ngày bắt đầu/kết thúc phù hợp với mục tiêu nghiên cứu.
+// Chọn cùng mùa ít mưa giữa các năm để kết quả MNDWI ít bị ảnh hưởng mùa vụ.
+// Có thể thay các năm, nhưng cần giữ cùng cửa sổ ngày cho mọi mốc.
 var periods = [
   {label: 'T0_2018', start: '2018-03-01', end: '2018-08-31'},
   {label: 'T1_2021', start: '2021-03-01', end: '2021-08-31'},
